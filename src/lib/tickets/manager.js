@@ -234,17 +234,20 @@ module.exports = class TicketManager {
 			return await sendError('blocked');
 		}
 
-		// Must stay under Discord's 3s interaction deadline, so fail open if naples-bot's DB is slow or down
-		// ponytail: fail-open means blacklisted users get through during a naples DB outage
+		// Must stay under Discord's 3s interaction deadline, so fail open if naples-bot's DB is slow or down;
+		// the flag survives the questions/topic modal so postQuestions() can warn staff in the new ticket
+		const uncheckedKey = `blacklist-unchecked:${category.guildId}-${interaction.user.id}`;
 		const blacklisted = await Promise.race([
 			isBlacklisted(interaction.user.id),
 			new Promise((_, reject) => setTimeout(() => reject(new Error('Blacklist check timed out')), 1500)),
 		]).catch(error => {
 			this.client.log.warn('Blacklist check failed, allowing ticket creation');
 			this.client.log.error(error);
-			return false;
+			return null;
 		});
 		if (blacklisted) return await sendError('blacklisted');
+		if (blacklisted === null) await this.client.keyv.set(uncheckedKey, true, ms('1h'));
+		else await this.client.keyv.delete(uncheckedKey);
 
 		if (category.requiredRoles.length !== 0) {
 			const missing = category.requiredRoles.some(r => !member.roles.cache.has(r));
@@ -514,6 +517,17 @@ module.exports = class TicketManager {
 						name: getMessage('ticket.opening_message.fields.topic'),
 						value: topic,
 					}),
+			);
+		}
+
+		const uncheckedKey = `blacklist-unchecked:${category.guildId}-${interaction.user.id}`;
+		if (await this.client.keyv.get(uncheckedKey)) {
+			await this.client.keyv.delete(uncheckedKey);
+			embeds.push(
+				new ExtendedEmbedBuilder()
+					.setColor(category.guild.errorColour)
+					.setTitle(getMessage('ticket.blacklist_unchecked.title'))
+					.setDescription(getMessage('ticket.blacklist_unchecked.description')),
 			);
 		}
 

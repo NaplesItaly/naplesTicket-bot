@@ -444,6 +444,9 @@ modals:
 ticket:
   answers:
     no_value: "*No response*"
+  blacklist_unchecked:
+    description: "It was not possible to check whether the user is blacklisted (the blacklist database is unreachable), so the ticket was opened anyway. Verify the user manually."
+    title: ⚠️ Blacklist check failed
   claimed: 🙌 {user} has claimed this ticket.
   close:
     closed:
