@@ -350,6 +350,9 @@ menus:
   guild:
     placeholder: Select a server
 misc:
+  blacklisted:
+    description: You are blacklisted and cannot create tickets.
+    title: ⛔ Blacklisted
   blocked:
     description: You are not allowed to create tickets.
     title: ❌ Blocked

@@ -18,6 +18,7 @@ const ms = require('ms');
 const ExtendedEmbedBuilder = require('../embed');
 const { logTicketEvent } = require('../logging');
 const { isStaff } = require('../users');
+const { isBlacklisted } = require('../blacklist');
 const { Collection } = require('discord.js');
 const spacetime = require('spacetime');
 
@@ -232,6 +233,18 @@ module.exports = class TicketManager {
 		if (member.isCommunicationDisabled()) {
 			return await sendError('blocked');
 		}
+
+		// Must stay under Discord's 3s interaction deadline, so fail open if naples-bot's DB is slow or down
+		// ponytail: fail-open means blacklisted users get through during a naples DB outage
+		const blacklisted = await Promise.race([
+			isBlacklisted(interaction.user.id),
+			new Promise((_, reject) => setTimeout(() => reject(new Error('Blacklist check timed out')), 1500)),
+		]).catch(error => {
+			this.client.log.warn('Blacklist check failed, allowing ticket creation');
+			this.client.log.error(error);
+			return false;
+		});
+		if (blacklisted) return await sendError('blacklisted');
 
 		if (category.requiredRoles.length !== 0) {
 			const missing = category.requiredRoles.some(r => !member.roles.cache.has(r));

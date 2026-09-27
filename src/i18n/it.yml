@@ -326,6 +326,9 @@ menus:
   guild:
     placeholder: Seleziona un server
 misc:
+  blacklisted:
+    description: Sei in blacklist e non puoi aprire ticket.
+    title: ⛔ Sei in blacklist
   blocked:
     description: Non puoi creare ticket.
     title: ❌ Bloccato

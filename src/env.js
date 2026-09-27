@@ -40,6 +40,7 @@ const env = {
 		new Error('is required'),
 	HTTP_TRUST_PROXY: () => true, // optional
 	INVALIDATE_TOKENS: () => true, // optional
+	NAPLES_DB_URL: () => true, // optional; naples-bot's PostgreSQL URL, enables the blacklist check
 	OVERRIDE_ARCHIVE: () => true, // optional
 	PUBLIC_BOT: () => true, // optional
 	PUBLISH_COMMANDS: () => true, // optional
